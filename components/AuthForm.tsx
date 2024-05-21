@@ -20,6 +20,9 @@ import { Input } from "@/components/ui/input"
 import { ITEMS } from '@/constants';
 import CustomInput from './CustomInput';
 import { Loader2 } from 'lucide-react';
+import SignIn from '@/app/(auth)/sign-in/page';
+import { useRouter } from 'next/navigation';
+import { signIn, signUp } from '@/lib/actions/user.actions';
 
 const formSchema=(type:string)=>z.object({
   email:z.string().email({message:'Enter a valid Email'}),
@@ -42,6 +45,7 @@ const AuthForm = ({ type }: { type: string }) => {
   const [user, setuser] = useState(null)
   const [loading, setLoading] = useState(false)
   const formFields=formSchema(type)
+  const router = useRouter()
    // 1. Define your form.
    const form = useForm<z.infer<typeof formFields>>({
     resolver: zodResolver(formFields),
@@ -52,11 +56,36 @@ const AuthForm = ({ type }: { type: string }) => {
   })
  
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formFields>) {
+  
+  const onSubmit=async(data: z.infer<typeof formFields>)=> {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    setLoading(true)
-    console.log(values)
+    try{
+      setLoading(true)
+      if(type=='sign-in'){
+        const response=await signIn({
+          email:data.email,
+          password:data.password
+        })
+        if(response){
+          router.push('/')
+        }
+      
+      }
+      else{
+        const newUser=await signUp(data)
+        setuser(newUser)
+        
+      }
+    }
+    catch(error){
+      console.log(error)
+    }
+    finally{
+      setLoading(false)
+    }
+    
+    console.log(data)
   }
   return (
     <section className='auth-form'>
